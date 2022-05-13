@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 
 import { io } from 'socket.io-client';
-import customParser from 'socket.io-msgpack-parser';
 
 import { QRCodeSVG } from 'qrcode.react';
 
@@ -18,15 +17,11 @@ interface IFormData {
 }
 
 const Home: React.FC = () => {
-  const [socket] = useState(
-    io('wss://95c6-179-190-170-181.ngrok.io', {
-      parser: customParser,
-    }),
-  );
+  const [socket] = useState(io('wss://whatsapp-buttons.herokuapp.com'));
 
   const [qrCode, setQrCode] = useState('');
   const [status, setStatus] = useState<
-    'none' | 'qrcode' | 'connecting' | 'connected'
+    'none' | 'qrcode' | 'connecting' | 'connected' | 'sent'
   >('none');
 
   useEffect((): any => {
@@ -51,7 +46,7 @@ const Home: React.FC = () => {
 
   const sendMessage = async (data: IFormData) => {
     const formatted = {
-      numbers: [`+55${data.number.replace(/\D/g, '')}`],
+      numbers: [`55${data.number.replace(/\D/g, '').replace('9', '')}`],
       text: data.text,
       footer: 'asdad',
       buttons: data.buttons.map(i => ({
@@ -61,15 +56,14 @@ const Home: React.FC = () => {
       })),
     };
 
-    console.log(formatted);
-
     socket.emit(
-      'send',
+      'WAsend',
       formatted.numbers,
       formatted.text,
       formatted.footer,
       formatted.buttons,
     );
+    setStatus('sent');
   };
 
   return (
@@ -159,6 +153,13 @@ const Home: React.FC = () => {
               </div>
             )}
           </Formik>
+        )}
+
+        {status === 'sent' && (
+          <p className="mt-6 text-center">
+            Você não conseguira ver que enviou a mensagem, ela deve chegar no
+            seu próprio número respondendo você
+          </p>
         )}
       </main>
     </div>
